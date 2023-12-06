@@ -1,0 +1,24 @@
+WITH PurchaseDifferences AS (
+    SELECT
+        customer_id,
+        purchase_date,
+        LAG(purchase_date) OVER (PARTITION BY customer_id ORDER BY purchase_date) AS previous_purchase_date
+    FROM
+        customer_purchases
+),
+PurchaseFrequencies AS (
+    SELECT
+        customer_id,
+        DATE_DIFF(purchase_date, previous_purchase_date, DAY) AS days_between_purchases
+    FROM
+        PurchaseDifferences
+    WHERE
+        previous_purchase_date IS NOT NULL
+)
+SELECT
+    customer_id,
+    AVG(days_between_purchases) AS avg_buying_frequency
+FROM
+    PurchaseFrequencies
+GROUP BY
+    customer_id
